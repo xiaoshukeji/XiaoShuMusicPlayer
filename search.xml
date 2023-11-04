@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="utf-8"?>
+<search>
+  <entry>
+    <title>逆光白 - 林俊杰</title>
+    <url>/XiaoShuMusicPlayer/2023/11/03/%E9%80%86%E5%85%89%E7%99%BD%20-%20%E6%9E%97%E4%BF%8A%E6%9D%B0/</url>
+    <content><![CDATA[
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" /> <!-- 设置页面编码为UTF-8 -->
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            background: #ffffff;
+        }
+        .container {
+            width: 100%;
+        }
+        .container #MusicPlayer {
+            width: 600px;
+            display: block;
+            margin: 0 auto;
+        }
+        .container .btn {
+            display: block;
+            margin: 0 auto;
+        }
+        .container .lrc {
+            width: 700px;
+            height: 450px;
+            overflow: hidden;
+            display: block;
+            margin: 0 auto;
+        }
+        .container .lrc #ullrc {
+            width: 100%;
+            padding: 0;
+            list-style: none;
+            transition: 0.3s all ease;
+            margin: 0;
+        }
+        /*歌词普通样式*/
+        .container .lrc #ullrc li {
+            height: 35px;
+            line-height: 35px;
+            font-size: 1em;
+            color: #aaa;
+            font-weight: normal;
+            transition: .3s all ease;
+            /*一定要加上不然看着突兀*/
+            list-style-type: none;
+            text-align: center;
+            display: block;
+            width: 100%;
+            margin: 0 auto;
+        }
+        /*动态歌词样式*/
+        .container .lrc #ullrc li.active {
+            font-size: 1.2em;
+            color: #111;
+            font-weight: bold;
+        }
+    </style>
+    <script src="https://kit.fontawesome.com/d82620443d.js" crossorigin="anonymous"></script> <!-- Font Awesome library -->
+</head>
+<body>
+<div class="container">
+    <audio id="MusicPlayer" controls loop></audio>
+    <div class="lrc">
+        <ul id="ullrc">
+            <!-- Lyrics will be displayed here -->
+        </ul>
+    </div>
+</div>
+<script>
+    var musicFile = "https://xiaoshukeji.ltd/XiaoShuMusicPlayer-API/Music/逆光白 - 林俊杰/逆光白 - 林俊杰_EM.ogg"; // Set the music file
+    var lyricsFile = "https://xiaoshukeji.ltd/XiaoShuMusicPlayer-API/Music/逆光白 - 林俊杰/逆光白 - 林俊杰_EM.lrc"; // Set the lyrics file
+
+    var lrc = ""; // Initialize with empty lyrics
+
+    function $(id) {
+        return document.getElementById(id);
+    }
+
+    function getLrcArray() {
+        var parts = lrc.split("\n");
+        for (let index = 0; index < parts.length; index++) {
+            parts[index] = getLrcObj(parts[index]);
+        }
+        return parts;
+
+        function getLrcObj(content) {
+            var twoParts = content.split("]");
+            var time = twoParts[0].substr(1);
+            var timeParts = time.split(":");
+            var seconds = +timeParts[1];
+            var min = +timeParts[0];
+            seconds = min * 60 + seconds - 0.3;
+            var words = twoParts[1];
+            return {
+                seconds: seconds,
+                words: words,
+            };
+        }
+    }
+
+    var lrcArray = getLrcArray();
+
+    function inputLrc() {
+        for (let index = 0; index < lrcArray.length; index++) {
+            var li = document.createElement("li");
+            li.innerText = lrcArray[index].words;
+            $("ullrc").appendChild(li);
+        }
+    }
+
+    inputLrc();
+
+    function setPosition() {
+        var index = getLrcIndex();
+        if (index == -1) {
+            return;
+        }
+        var lrc_li_height = 35;
+        var lrc_ul_height = 450;
+        var top = index * lrc_li_height + lrc_li_height / 2 - lrc_ul_height / 2;
+        if (top < 0) {
+            top = 0;
+        }
+        $("ullrc").style.marginTop = -top + "px";
+        var activeLi = $("ullrc").querySelector(".active");
+        if (activeLi) {
+            activeLi.classList.remove("active");
+        }
+        $("ullrc").children[index].classList.add("active");
+    }
+
+    var turn = 0;
+
+    function getLrcIndex() {
+        var time = $("MusicPlayer").currentTime + turn;
+        for (var index = 0; index < lrcArray.length; index++) {
+            if (lrcArray[index].seconds > time) {
+                return index - 1;
+            }
+        }
+    }
+
+    $("MusicPlayer").ontimeupdate = setPosition;
+
+    function handleFileSelect(input) {
+        const file = input.files[0];
+        if (file) {
+            const audioPlayer = $("MusicPlayer");
+            const fileURL = URL.createObjectURL(file);
+            audioPlayer.src = fileURL;
+
+            // Load lyrics from the specified file
+            fetch(lyricsFile, {
+                method: 'get',
+                headers: new Headers({
+                    'Content-Type': 'text/plain; charset=utf-8' // 设置请求头的编码
+                })
+            })
+                .then(response => response.text())
+                .then(data => {
+                    lrc = data;
+                    lrcArray = getLrcArray();
+                    inputLrc();
+                });
+        }
+    }
+
+    $("fileInput").addEventListener("change", function () {
+        handleFileSelect(this);
+    });
+
+    // Set the music player's source to the specified music file
+    $("MusicPlayer").src = musicFile;
+
+    function handleLrcFileSelect(input) {
+        const file = input.files[0];
+        if (file) {
+            // Load lyrics from the selected LRC file
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                lrc = event.target.result;
+                lrcArray = getLrcArray();
+                $("ullrc").innerHTML = ''; // Clear existing lyrics
+                inputLrc();
+            };
+            reader.readAsText(file, 'utf-8'); // 指定UTF-8编码
+        }
+    }
+
+</script>
+</body>
+</html>
+```
+]]></content>
+      <categories>
+        <category>林俊杰</category>
+      </categories>
+      <tags>
+        <tag>Pop</tag>
+      </tags>
+  </entry>
+</search>
